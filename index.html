@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advertising Effectiveness Analysis | Celebrity vs Non-Celebrity Performance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        /* SONER Logo Animation */
+        @keyframes sonerScan { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes sonerBlip { 0%, 20%, 100% { opacity: 0; } 2%, 15% { opacity: 1; } 3% { transform: scale(1.2); } }
+        
+        .soner-logo { display: flex; align-items: center; color: white; font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 300; }
+        .soner-radar { width: 24px; height: 24px; border-radius: 50%; border: 1px solid white; margin: 0 3px; position: relative; background-color: rgba(255, 255, 255, 0.05); overflow: hidden; }
+        .soner-scanner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: sonerScan 4s linear infinite; transform-origin: center; }
+        .soner-scanner::before { content: ''; position: absolute; top: 0; left: 50%; width: 50%; height: 50%; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.4)); transform-origin: bottom left; clip-path: polygon(0 0, 100% 0, 0 100%); }
+        .soner-scanner::after { content: ''; position: absolute; top: 0; left: 50%; width: 50%; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 1)); transform-origin: left center; box-shadow: 0 0 4px rgba(255, 255, 255, 0.8); }
+        .soner-blip { position: absolute; width: 2px; height: 2px; background-color: white; border-radius: 50%; opacity: 0; box-shadow: 0 0 4px white; }
+        .soner-blip:nth-child(1) { top: 25%; left: 30%; animation: sonerBlip 4s 1s infinite; }
+        .soner-blip:nth-child(2) { top: 65%; left: 60%; animation: sonerBlip 4s 2.5s infinite; }
+        .soner-tagline { color: white; font-size: 8px; text-transform: uppercase; font-weight: 500; letter-spacing: 0.5em; margin-left: 10px; opacity: 0.8; }
+        
+        :root {
+            --primary: #4285f4;
+            --primary-light: #1a2233;
+            --primary-dark: #8ab4f8;
+            --secondary: #34a853;
+            --secondary-light: #1a2a1e;
+            --warning: #fbbc04;
+            --warning-light: #332a1a;
+            --danger: #ea4335;
+            --danger-light: #331f1e;
+            --gray-100: #1e1e1e;
+            --gray-200: #2d2d2d;
+            --gray-300: #3d3d3d;
+            --gray-400: #4d4d4d;
+            --gray-500: #777777;
+            --gray-600: #a0a0a0;
+            --gray-700: #c0c0c0;
+            --gray-800: #e0e0e0;
+            --gray-900: #f0f0f0;
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --section-bg: #181818;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #ffffff;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+        
+        header {
+            background: linear-gradient(135deg, #1a73e8, #174ea6);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 600; line-height: 1.2; }
+        .subtitle { font-size: 1.2rem; opacity: 0.9; margin-bottom: 20px; }
+        h2 { 
+            font-size: 1.8rem; 
+            color: var(--primary); 
+            margin: 40px 0 25px; 
+            border-bottom: 2px solid var(--primary); 
+            padding-bottom: 12px;
+            font-weight: 600;
+        }
+        h3 { 
+            font-size: 1.4rem; 
+            color: var(--primary-dark); 
+            margin: 30px 0 18px;
+            font-weight: 600;
+        }
+        h4 {
+            font-size: 1.15rem;
+            color: #ffffff;
+            margin: 20px 0 12px;
+            font-weight: 600;
+        }
+        
+        .section {
+            background-color: var(--section-bg);
+            border-radius: 12px;
+            padding: 35px;
+            margin-bottom: 30px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .hero-statement {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.05));
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid var(--gray-300);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(66, 133, 244, 0.3);
+        }
+        
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            font-size: 0.95rem;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+        
+        .quote-box {
+            background-color: var(--gray-200);
+            border-left: 4px solid var(--secondary);
+            padding: 25px;
+            margin: 25px 0;
+            font-style: italic;
+            color: #ffffff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.7;
+        }
+        
+        .quote-box strong {
+            color: var(--primary-dark);
+            font-style: normal;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(234, 67, 53, 0.1), rgba(234, 67, 53, 0.05));
+            border: 2px solid var(--danger);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .highlight-box h4 {
+            color: var(--danger);
+            margin-bottom: 15px;
+        }
+        
+        .highlight-box.success {
+            background: linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(52, 168, 83, 0.05));
+            border-color: var(--secondary);
+        }
+        
+        .highlight-box.success h4 {
+            color: var(--secondary);
+        }
+        
+        .highlight-box.info {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.05));
+            border-color: var(--primary);
+        }
+        
+        .highlight-box.info h4 {
+            color: var(--primary);
+        }
+        
+        .highlight-box.warning {
+            background: linear-gradient(135deg, rgba(251, 188, 4, 0.1), rgba(251, 188, 4, 0.05));
+            border-color: var(--warning);
+        }
+        
+        .highlight-box.warning h4 {
+            color: var(--warning);
+        }
+        
+        .info-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .info-card h4 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+        }
+        
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 1px solid var(--gray-300);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        thead tr {
+            background-color: var(--gray-200);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-right: 1px solid var(--gray-300);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th:hover {
+            background-color: var(--gray-300);
+        }
+        
+        th:last-child {
+            border-right: none;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--gray-300);
+            border-right: 1px solid var(--gray-300);
+        }
+        
+        td:last-child {
+            border-right: none;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tbody tr:hover {
+            background-color: var(--gray-200);
+        }
+        
+        .main-section-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 30px;
+            transition: color 0.2s ease;
+        }
+        
+        .main-section-header:hover { 
+            color: var(--primary-dark); 
+        }
+        
+        .main-section-header:after {
+            content: '\f078';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s ease;
+            font-size: 0.8em;
+        }
+        
+        .main-section-header.collapsed:after {
+            transform: translateY(-50%) rotate(-90deg);
+        }
+        
+        .main-section-content {
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
+            max-height: 9999px;
+            opacity: 1;
+        }
+        
+        .main-section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .positive { color: var(--secondary); font-weight: bold; }
+        .negative { color: var(--danger); font-weight: bold; }
+        .neutral { color: var(--warning); font-weight: bold; }
+        
+        .metric-toggle-btn {
+            background-color: var(--gray-300);
+            color: #ffffff;
+            border: 2px solid var(--gray-400);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .metric-toggle-btn:hover {
+            background-color: var(--gray-400);
+            transform: translateY(-2px);
+        }
+        
+        .metric-toggle-btn.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+        }
+        
+        .market-deep-dive {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .market-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gray-300);
+        }
+        
+        .market-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        
+        .performance-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-strong {
+            background: linear-gradient(135deg, #34a853, #2d9348);
+            color: white;
+        }
+        
+        .badge-improving {
+            background: linear-gradient(135deg, #4285f4, #3367d6);
+            color: white;
+        }
+        
+        .badge-declining {
+            background: linear-gradient(135deg, #ea4335, #d93025);
+            color: white;
+        }
+        
+        .badge-neutral {
+            background: linear-gradient(135deg, #fbbc04, #f29900);
+            color: white;
+        }
+        
+        footer {
+            background-color: var(--gray-100);
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 1px solid var(--gray-300);
+            color: #ffffff;
+        }
+        
+        @media screen and (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.2rem; }
+            .section { padding: 25px; }
+            .metric-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+                <div class="soner-logo">
+                    S<div class="soner-radar">
+                        <div class="soner-scanner"></div>
+                        <div class="soner-blip"></div>
+                        <div class="soner-blip"></div>
+                    </div>NER
+                    <span class="soner-tagline">Strategic Intelligence</span>
+                </div>
+            </div>
+            <h1>Advertising Effectiveness Analysis</h1>
+            <p class="subtitle">Celebrity vs Non-Celebrity Campaign Performance Across 25 Markets</p>
+            <p>Department of Culture and Tourism - Abu Dhabi | Strategic Marketing & Communications</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        
+        <!-- Foundational Observation -->
+        <div class="hero-statement">
+            "Across 25 markets, advertising exposure drove positive brand lift in 99.2% of all measurements, validating fundamental campaign effectiveness. The analysis reveals celebrity campaigns excelled at lower-funnel intent conversion (48% improvement rate) versus mid-funnel consideration (44% rate)."
+        </div>
+        
+        <!-- Executive Summary -->
+        <section class="section">
+            <h2 class="main-section-header"><i class="fas fa-chart-line"></i> Executive Summary</h2>
+            <div class="main-section-content">
+                
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">99.2%</div>
+                        <div class="metric-label"><strong>Positive Lift Success Rate</strong><br>356 of 359 measurements<br><em style="color: var(--primary-dark); font-size: 0.9rem;">Advertising exposure drives performance</em></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">48%</div>
+                        <div class="metric-label"><strong>Intent Lift Winners</strong><br>12 of 25 markets improved<br><em style="color: var(--primary-dark); font-size: 0.9rem;">Lower-funnel conversion strength</em></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">44%</div>
+                        <div class="metric-label"><strong>Consideration Lift Winners</strong><br>11 of 25 markets improved<br><em style="color: var(--primary-dark); font-size: 0.9rem;">Mid-funnel challenges</em></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">+4.3pp</div>
+                        <div class="metric-label"><strong>Best Intent Performance</strong><br>South Korea celebrity lift<br><em style="color: var(--primary-dark); font-size: 0.9rem;">Cultural fit validates strategy</em></div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box info">
+                    <h4><i class="fas fa-info-circle"></i> Foundational Validation</h4>
+                    <p style="color: #ffffff; margin: 0;">
+                        Respondents exposed to Abu Dhabi advertising consistently demonstrated higher consideration and intent than those not exposed, with positive lift observed in <strong>99.2% of all measurements</strong> (356 of 359 data points). Lift ranged from +1.0pp to +28pp depending on market and metric. Only 3 rare negative instances occurred (France Q3'23 consideration -2pp, France Q1'24 intent -1pp, UK Q3'23 intent -3pp). This validates the fundamental effectiveness of advertising investment, establishing the framework for comparing celebrity versus non-celebrity campaign performance.
+                    </p>
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- Interactive Metric Comparison -->
+        <section class="section">
+            <h2 class="main-section-header"><i class="fas fa-exchange-alt"></i> Celebrity vs Non-Celebrity: Advertising Lift Comparison</h2>
+            <div class="main-section-content">
+                
+                <div class="info-card" style="border-left: 4px solid var(--primary); margin-bottom: 25px;">
+                    <h4 style="margin: 0 0 10px 0;"><i class="fas fa-calculator"></i> Methodology</h4>
+                    <p style="color: #ffffff; margin: 0; line-height: 1.8;">
+                        <strong>"Lift"</strong> measures the difference in brand metrics (consideration or intent) between respondents who have <strong>seen</strong> Abu Dhabi advertising versus those who have <strong>not seen</strong> advertising. For example, if 44% of those who saw ads would consider Abu Dhabi vs. 38% who didn't, the lift is <strong>+6pp</strong>. Campaign averages compare: <strong>Non-Celebrity Period</strong> (Q3'23-Q3'24, five quarters) vs. <strong>Celebrity Campaign</strong> (Q4'24-Q1'25, two quarters with Chris Hemsworth). The difference between these averages shows the relative advertising effectiveness improvement.
+                    </p>
+                </div>
+                
+                <div class="highlight-box warning">
+                    <h4><i class="fas fa-exclamation-circle"></i> Context: Same Creative Across All Markets</h4>
+                    <p style="color: #ffffff; margin: 0;">
+                        The Chris Hemsworth campaign featured <strong>identical creative</strong> across all 25 markets. Performance variations therefore reflect <strong>pure cultural receptivity and market fit</strong>, not creative execution differences. This validates the critical need for market-specific creative localization in future celebrity campaigns. For example, the same creative achieved +4.3pp intent lift in South Korea but -2.6pp in Armenia (6.9pp swing), and +2.8pp consideration in Belgium but -2.4pp in Netherlands (5.2pp swing) - proving cultural fit is the determining factor for celebrity campaign success.
+                    </p>
+                </div>
+                
+                <div class="highlight-box warning">
+                    <h4><i class="fas fa-chart-line"></i> Attribution Complexity & Geopolitical Context</h4>
+                    <p style="color: #ffffff; margin: 0 0 15px 0;">
+                        The Israel-Palestine conflict that began in Q3'23 (October 2023) significantly impacted brand health metrics across Abu Dhabi's source markets, creating <strong>attribution complexity</strong> for the celebrity campaign analysis. The crisis period extended through the entire non-celebrity baseline measurement period.
+                    </p>
+                    <p style="color: #ffffff; margin: 0 0 10px 0; font-weight: 600;">Markets Most Affected During Crisis Period (particularly Q3'24):</p>
+                    <ul style="color: #ffffff; margin: 0 0 15px 20px; line-height: 1.8;">
+                        <li><strong>Severe Consideration Declines:</strong> France (-3.5pp), India (-2.6pp), UK (-2.1pp)</li>
+                        <li><strong>Severe Intent Declines:</strong> Italy (-8.8pp, most affected), Germany (-3.7pp), France (-2.7pp), Russia (-2.2pp)</li>
+                    </ul>
+                    <p style="color: #ffffff; margin: 0 0 10px 0; font-weight: 600;">Markets Unaffected (ME/GCC Region):</p>
+                    <p style="color: #ffffff; margin: 0 0 15px 0;">
+                        Regional markets demonstrated stability or growth during the crisis period: Saudi Arabia (+1.5pp consideration), Oman (+4.0pp consideration), Kuwait/Bahrain/Qatar/Egypt (minimal to no decline). This validates that local understanding of geopolitical context mitigated safety concerns.
+                    </p>
+                    <p style="color: #ffffff; margin: 0 0 15px 0;">
+                        <strong>Recovery Period Overlap:</strong> The Q4'24-Q1'25 recovery period <strong>directly overlaps with the celebrity campaign period</strong>, creating attribution complexity.
+                    </p>
+                    <p style="color: #ffffff; margin: 0;">
+                        <strong>Implication:</strong> The "celebrity campaign lift" represents a <strong>composite effect</strong> of Chris Hemsworth celebrity influence + geopolitical recovery + other concurrent marketing activities + seasonal patterns. <strong>ME/GCC market results provide the clearest assessment of pure celebrity effectiveness</strong>, as these markets experienced no crisis-driven baseline depression. Western and Asian market improvements should be interpreted with acknowledgment that some lift may be attributable to crisis recovery rather than celebrity impact alone.
+                    </p>
+                </div>
+                
+                <div class="highlight-box info">
+                    <h4><i class="fas fa-clock"></i> Aggregate Market Performance Timeline</h4>
+                    <p style="color: #ffffff; margin: 0 0 20px 0;">
+                        The tables below show aggregated brand health metrics across T1 and T2 markets from Q3'22 to Q1'25, illustrating the geopolitical crisis impact and celebrity campaign timing.
+                    </p>
+                    
+                    <h5 style="color: var(--primary-dark); margin: 20px 0 15px 0;">Tier 1 Markets (Top 10 Priority Markets)</h5>
+                    <div style="overflow-x: auto;">
+                        <table style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Awareness</th>
+                                    <th>Consideration</th>
+                                    <th>Intent</th>
+                                    <th>Key Events</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Q3'22</td><td>78.4%</td><td>42.0%</td><td>29.9%</td><td>Pre-crisis baseline</td></tr>
+                                <tr><td>Q4'22</td><td style="background-color: rgba(52, 168, 83, 0.11);">79.6%</td><td style="background-color: rgba(52, 168, 83, 0.12);">43.8%</td><td style="background-color: rgba(52, 168, 83, 0.11);">31.0%</td><td></td></tr>
+                                <tr><td>Q1'23</td><td style="background-color: rgba(52, 168, 83, 0.14);">80.7%</td><td style="background-color: rgba(52, 168, 83, 0.18);">44.7%</td><td style="background-color: rgba(52, 168, 83, 0.20);">31.7%</td><td></td></tr>
+                                <tr><td>Q2'23</td><td style="background-color: rgba(52, 168, 83, 0.16);">81.2%</td><td style="background-color: rgba(52, 168, 83, 0.20);">44.8%</td><td style="background-color: rgba(52, 168, 83, 0.14);">31.4%</td><td></td></tr>
+                                <tr style="border: 2px solid var(--warning);"><td><strong>Q3'23</strong></td><td style="background-color: rgba(52, 168, 83, 0.17);"><strong>81.4%</strong></td><td style="background-color: rgba(52, 168, 83, 0.18);"><strong>44.7%</strong></td><td style="background-color: rgba(52, 168, 83, 0.11);"><strong>31.0%</strong></td><td><strong>Israel-Palestine conflict begins</strong></td></tr>
+                                <tr><td>Q4'23</td><td style="background-color: rgba(52, 168, 83, 0.19);">82.4%</td><td style="background-color: rgba(234, 67, 53, 0.11);">43.4%</td><td style="background-color: rgba(234, 67, 53, 0.12);">27.2%</td><td>Crisis impact emerging</td></tr>
+                                <tr><td>Q1'24</td><td style="background-color: rgba(52, 168, 83, 0.19);">82.6%</td><td style="background-color: rgba(234, 67, 53, 0.12);">43.2%</td><td style="background-color: rgba(234, 67, 53, 0.14);">26.5%</td><td>Crisis deepens</td></tr>
+                                <tr><td>Q2'24</td><td style="background-color: rgba(52, 168, 83, 0.20);">83.1%</td><td style="background-color: rgba(234, 67, 53, 0.14);">42.9%</td><td style="background-color: rgba(234, 67, 53, 0.15);">26.2%</td><td>Lowest intent point</td></tr>
+                                <tr><td>Q3'24</td><td style="background-color: rgba(234, 67, 53, 0.15);">82.7%</td><td style="background-color: rgba(234, 67, 53, 0.18);">42.2%</td><td style="background-color: rgba(234, 67, 53, 0.20);">25.7%</td><td>Peak crisis impact</td></tr>
+                                <tr style="border: 2px solid var(--primary);"><td><strong>Q4'24</strong></td><td style="background-color: rgba(52, 168, 83, 0.20);"><strong>83.6%</strong></td><td style="background-color: rgba(52, 168, 83, 0.15);"><strong>43.2%</strong></td><td style="background-color: rgba(52, 168, 83, 0.15);"><strong>26.8%</strong></td><td><strong>Celebrity campaign launches</strong></td></tr>
+                                <tr><td>Q1'25</td><td style="background-color: rgba(52, 168, 83, 0.20);">84.4%</td><td style="background-color: rgba(52, 168, 83, 0.18);">44.7%</td><td style="background-color: rgba(52, 168, 83, 0.15);">27.8%</td><td>Recovery + celebrity period</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p style="color: #ffffff; margin: 15px 0; font-size: 0.9rem;">
+                        <strong>Key Observations:</strong><br>
+                        • Awareness remained stable (+0.7pp from Q2'23 to Q3'24)<br>
+                        • Consideration declined -2.6pp from pre-crisis peak to crisis low<br>
+                        • Intent most severely impacted: -5.7pp decline from Q1'23 peak (31.7%) to Q3'24 low (25.7%)<br>
+                        • Q4'24-Q1'25 shows recovery toward pre-crisis levels, coinciding with celebrity campaign
+                    </p>
+                    
+                    <h5 style="color: var(--primary-dark); margin: 30px 0 15px 0;">Tier 2 Markets (15 Secondary Markets)</h5>
+                    <div style="overflow-x: auto;">
+                        <table style="font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Awareness</th>
+                                    <th>Consideration</th>
+                                    <th>Intent</th>
+                                    <th>Key Events</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Q4'23</td><td>55.1%</td><td>23.4%</td><td>12.6%</td><td>Baseline measurement begins (during crisis)</td></tr>
+                                <tr><td>Q1'24</td><td style="background-color: rgba(234, 67, 53, 0.13);">55.0%</td><td style="background-color: rgba(234, 67, 53, 0.16);">23.6%</td><td style="background-color: rgba(234, 67, 53, 0.12);">12.5%</td><td></td></tr>
+                                <tr><td>Q2'24</td><td style="background-color: rgba(52, 168, 83, 0.15);">55.8%</td><td style="background-color: rgba(52, 168, 83, 0.15);">24.7%</td><td style="background-color: rgba(52, 168, 83, 0.15);">13.1%</td><td></td></tr>
+                                <tr><td>Q3'24</td><td style="background-color: rgba(52, 168, 83, 0.10);">57.5%</td><td style="background-color: rgba(52, 168, 83, 0.12);">26.5%</td><td style="background-color: rgba(52, 168, 83, 0.10);">13.6%</td><td></td></tr>
+                                <tr style="border: 2px solid var(--primary);"><td><strong>Q4'24</strong></td><td style="background-color: rgba(234, 67, 53, 0.10);"><strong>57.1%</strong></td><td style="background-color: rgba(234, 67, 53, 0.10);"><strong>26.3%</strong></td><td style="background-color: rgba(52, 168, 83, 0.10);"><strong>13.8%</strong></td><td><strong>Celebrity campaign launches</strong></td></tr>
+                                <tr><td>Q1'25</td><td style="background-color: rgba(52, 168, 83, 0.15);">58.6%</td><td style="background-color: rgba(52, 168, 83, 0.18);">27.5%</td><td style="background-color: rgba(52, 168, 83, 0.20);">14.6%</td><td>Recovery + celebrity period</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p style="color: #ffffff; margin: 15px 0; font-size: 0.9rem;">
+                        <strong>Key Observations:</strong><br>
+                        • T2 tracking began Q4'23 (already during crisis period)<br>
+                        • Steady growth across all metrics from baseline<br>
+                        • Q4'24-Q1'25 acceleration may reflect celebrity campaign + general recovery
+                    </p>
+                    
+                    <div style="margin-top: 25px;">
+                        <h5 style="color: var(--warning); margin-bottom: 15px;"><i class="fas fa-timeline"></i> Campaign Period Timeline</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, rgba(52, 168, 83, 0.2), rgba(52, 168, 83, 0.1)); border: 2px solid var(--secondary); border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: var(--secondary); font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Pre-Crisis Baseline</div>
+                                <div style="color: #ffffff; font-size: 0.9rem; margin-bottom: 5px;">Q3'22 - Q2'23</div>
+                                <div style="color: var(--gray-600); font-size: 0.85rem;">4 quarters</div>
+                                <div style="color: #ffffff; font-size: 0.85rem; margin-top: 10px;">Normal performance</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(251, 188, 4, 0.2), rgba(251, 188, 4, 0.1)); border: 2px solid var(--warning); border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: var(--warning); font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Crisis Period</div>
+                                <div style="color: #ffffff; font-size: 0.9rem; margin-bottom: 5px;">Q3'23 - Q3'24</div>
+                                <div style="color: var(--gray-600); font-size: 0.85rem;">5 quarters</div>
+                                <div style="color: var(--warning); font-size: 0.85rem; margin-top: 10px; font-weight: bold;">↓ Conflict begins Oct 2023</div>
+                                <div style="color: #ffffff; font-size: 0.85rem; margin-top: 5px;">Non-Celebrity Campaign Baseline</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.2), rgba(66, 133, 244, 0.1)); border: 2px solid var(--primary); border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: var(--primary); font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Recovery Period</div>
+                                <div style="color: #ffffff; font-size: 0.9rem; margin-bottom: 5px;">Q4'24 - Q1'25</div>
+                                <div style="color: var(--gray-600); font-size: 0.85rem;">2 quarters</div>
+                                <div style="color: var(--primary); font-size: 0.85rem; margin-top: 10px; font-weight: bold;">↑ Celebrity campaign launches</div>
+                                <div style="color: #ffffff; font-size: 0.85rem; margin-top: 5px;">Chris Hemsworth</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p style="color: var(--gray-600); margin: 20px 0 0 0; font-style: italic;">
+                        Note: The non-celebrity baseline (Q3'23-Q3'24) was measured during the crisis period, while the celebrity campaign (Q4'24-Q1'25) occurred during recovery. While the lift methodology (seen vs. not seen advertising) controls for external factors within each measurement period, readers should consider the broader market context when interpreting results.
+                    </p>
+                </div>
+                
+                <!-- Metric Toggle -->
+                <div style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                    <button class="metric-toggle-btn active" data-metric="consideration">
+                        <i class="fas fa-heart"></i> Consideration Lift
+                    </button>
+                    <button class="metric-toggle-btn" data-metric="intent">
+                        <i class="fas fa-plane-departure"></i> Intent Lift
+                    </button>
+                </div>
+                
+                <h3 id="comparisonTitle">All-Market Consideration Lift Comparison</h3>
+                
+                <table id="allMarketTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Market <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(1)">Non-Celebrity Avg <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(2)">Celebrity Avg <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(3)">Difference <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(4)">Result <i class="fas fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+                
+                <div class="quote-box" id="metricInsight">
+                    <!-- Updated dynamically -->
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- Key Strategic Insights -->
+        <section class="section">
+            <h2 class="main-section-header"><i class="fas fa-lightbulb"></i> Key Strategic & Tactical Insights</h2>
+            <div class="main-section-content">
+                
+                <h3>Strategic Insights</h3>
+                
+                <div class="highlight-box success">
+                    <h4><i class="fas fa-bullseye"></i> 1. Intent Lift is Easier to Influence with Celebrity than Consideration</h4>
+                    <p style="color: #ffffff; margin: 10px 0 0 0; line-height: 1.8;">
+                        <strong>Evidence:</strong> Intent Lift improved in 48% of markets (12 of 25) while Consideration Lift improved in only 44% (11 of 25).<br><br>
+                        <strong>Interpretation:</strong> Chris Hemsworth effectively moved consumers down the funnel from consideration to intent in over half the markets (lower-funnel success), even when not always successful at mid-funnel consideration lift. His brand congruence resonated more at the decision-making stage.<br><br>
+                        <strong>Implication:</strong> Celebrity campaigns are most effective at lower-funnel conversion when targeting audiences already familiar with the destination. Use celebrities for intent messaging rather than mid-funnel consideration building.
+                    </p>
+                </div>
+                
+                <div class="highlight-box warning">
+                    <h4><i class="fas fa-globe-asia"></i> 2. Emerging Markets Show Volatile Performance</h4>
+                    <p style="color: #ffffff; margin: 10px 0 0 0; line-height: 1.8;">
+                        <strong>Evidence:</strong> South Korea recorded highest Intent improvement (+4.3pp) while Armenia saw steepest decline (-2.6pp) = 6.9pp swing. India showed +2.4pp consideration gain but -0.5pp intent decline.<br><br>
+                        <strong>Interpretation:</strong> South Korea's advertising culture embraces celebrity endorsements, explaining exceptional performance. Eastern European markets showed limited Western celebrity resonance.<br><br>
+                        <strong>Implication:</strong> Market-specific strategies essential. Scale Hemsworth in South Korea, add conversion messaging in India, replace with regional influencers in Eastern Europe/Central Asia.
+                    </p>
+                </div>
+                
+                <h3>Tactical Insights</h3>
+                
+                <div class="highlight-box info">
+                    <h4><i class="fas fa-map-marked-alt"></i> 3. GCC/MENA Requires Extreme Localization</h4>
+                    <p style="color: #ffffff; margin: 10px 0 0 0; line-height: 1.8;">
+                        <strong>Evidence:</strong> Qatar won regionally (+2.8pp intent) while Saudi Arabia declined (-0.7pp consideration, -1.7pp intent) = 4.5pp gap within same region.<br><br>
+                        <strong>Interpretation:</strong> Celebrity messaging not culturally optimized for all GCC markets despite cultural similarities.<br><br>
+                        <strong>Implication:</strong> Each GCC market requires culturally-specific creative adaptations, localized value propositions, and potentially regional celebrity partnerships. Qatar's approach provides blueprint.
+                    </p>
+                </div>
+                
+                <div class="highlight-box warning">
+                    <h4><i class="fas fa-chart-bar"></i> 4. Non-Celebrity Campaigns Set High Baseline in Some Markets</h4>
+                    <p style="color: #ffffff; margin: 10px 0 0 0; line-height: 1.8;">
+                        <strong>Evidence:</strong> Netherlands showed -2.4pp consideration decline but non-celebrity baseline was already +12.4pp. Armenia had +9.6pp non-celebrity intent lift before -2.6pp celebrity decline.<br><br>
+                        <strong>Interpretation:</strong> Where non-celebrity advertising was highly effective, celebrity's incremental value was minimal or negative. Celebrity may have disrupted locally optimized messaging.<br><br>
+                        <strong>Implication:</strong> Audit baseline performance before celebrity investment. High-baseline markets (Netherlands, Armenia) should maintain non-celebrity approach. A/B test in these markets before full rollout.
+                    </p>
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- Market Deep Dives -->
+        <section class="section">
+            <h2 class="main-section-header"><i class="fas fa-globe"></i> Market-by-Market Deep Dive (25 Markets)</h2>
+            <div class="main-section-content">
+                
+                <p style="color: #ffffff; margin-bottom: 30px; font-size: 1.05rem;">
+                    Detailed advertising lift analysis for each market, comparing non-celebrity period (Q3'23-Q3'24) versus celebrity campaign (Q4'24-Q1'25). Markets are organized by region and performance.
+                </p>
+                
+                <div id="marketDeepDives">
+                    <!-- Market deep dives will be generated by JavaScript -->
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p style="margin: 0; color: var(--gray-700); font-size: 0.9rem;">© 2025 Research & Insights Unit | Strategic Marketing & Communications | Department of Culture and Tourism – Abu Dhabi</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="advert_effectiveness_data.js"></script>
+    <script>
+        let currentMetric = 'consideration';
+        let sortColumn = 3; // Default sort by difference
+        let sortAscending = false;
+        
+        // Collapsible sections functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const headers = document.querySelectorAll('.main-section-header');
+            headers.forEach(header => {
+                header.classList.add('collapsed');
+                const content = header.nextElementSibling;
+                if (content && content.classList.contains('main-section-content')) {
+                    content.classList.add('collapsed');
+                }
+                
+                header.addEventListener('click', function() {
+                    this.classList.toggle('collapsed');
+                    const content = this.nextElementSibling;
+                    if (content && content.classList.contains('main-section-content')) {
+                        content.classList.toggle('collapsed');
+                    }
+                });
+            });
+            
+            // Initialize
+            renderTable();
+            renderMarketDeepDives();
+            
+            // Metric toggle buttons
+            document.querySelectorAll('.metric-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.metric-toggle-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMetric = this.dataset.metric;
+                    renderTable();
+                    renderMarketDeepDives();
+                });
+            });
+        });
+        
+        function renderTable() {
+            const metricName = currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1);
+            document.getElementById('comparisonTitle').textContent = `All-Market ${metricName} Lift Comparison`;
+            
+            const markets = Object.keys(MARKET_DATA);
+            const rows = markets.map(market => {
+                const data = MARKET_DATA[market][currentMetric];
+                return {
+                    market: market,
+                    nonCeleb: data.avgNonCeleb,
+                    celeb: data.avgCeleb,
+                    diff: data.diff,
+                    result: data.diff > 0 ? 'Celebrity stronger' : (data.diff < 0 ? 'Non-celebrity stronger' : 'Equal')
+                };
+            });
+            
+            // Sort
+            rows.sort((a, b) => {
+                let aVal = sortColumn === 0 ? a.market : (sortColumn === 1 ? a.nonCeleb : (sortColumn === 2 ? a.celeb : (sortColumn === 3 ? a.diff : a.result)));
+                let bVal = sortColumn === 0 ? b.market : (sortColumn === 1 ? b.nonCeleb : (sortColumn === 2 ? b.celeb : (sortColumn === 3 ? b.diff : b.result)));
+                if (typeof aVal === 'string') {
+                    return sortAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                }
+                return sortAscending ? aVal - bVal : bVal - aVal;
+            });
+            
+            // Render table
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = rows.map(row => {
+                const bgColor = row.diff > 0 ? 'rgba(52, 168, 83, 0.1)' : (row.diff < 0 ? 'rgba(234, 67, 53, 0.05)' : 'transparent');
+                const diffClass = row.diff > 0 ? 'positive' : (row.diff < 0 ? 'negative' : 'neutral');
+                return `
+                    <tr style="background-color: ${bgColor};">
+                        <td><strong>${row.market}</strong></td>
+                        <td>+${row.nonCeleb.toFixed(1)}pp</td>
+                        <td>+${row.celeb.toFixed(1)}pp</td>
+                        <td><span class="${diffClass}">${row.diff > 0 ? '+' : ''}${row.diff.toFixed(1)}pp</span></td>
+                        <td>${row.result}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Update insight
+            const winners = rows.filter(r => r.diff > 0).length;
+            const equal = rows.filter(r => r.diff === 0).length;
+            const losers = rows.filter(r => r.diff < 0).length;
+            
+            const winnerPct = Math.round((winners / 25) * 100);
+            const equalPct = Math.round((equal / 25) * 100);
+            const loserPct = Math.round((losers / 25) * 100);
+            
+            const insightText = currentMetric === 'consideration' 
+                ? `<strong>Consideration Lift Analysis:</strong> Celebrity campaign delivered higher consideration lift in ${winners} markets (${winnerPct}%), equal performance in ${equal} markets (${equalPct}%), and lower lift in ${losers} markets (${loserPct}%). Top performers: Belgium (+2.8pp), India (+2.4pp), Russia (+1.4pp). This mixed result suggests celebrity effectiveness strongly depends on cultural fit and market characteristics.`
+                : `<strong>Intent Lift Analysis:</strong> Celebrity campaign achieved higher intent lift in ${winners} markets (${winnerPct}%), equal performance in ${equal} markets (${equalPct}%), and lower lift in ${losers} markets (${loserPct}%). Top performers: South Korea (+4.3pp), Qatar (+2.8pp), Germany (+0.8pp). Celebrity campaigns showed stronger lower-funnel performance, effectively converting consideration into travel intent across majority of markets.`;
+            
+            document.getElementById('metricInsight').innerHTML = insightText;
+        }
+        
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortAscending = !sortAscending;
+            } else {
+                sortColumn = col;
+                sortAscending = false;
+            }
+            renderTable();
+        }
+        
+        function renderMarketDeepDives() {
+            const container = document.getElementById('marketDeepDives');
+            const markets = Object.keys(MARKET_DATA);
+            
+            container.innerHTML = markets.map(market => {
+                const data = MARKET_DATA[market][currentMetric];
+                const diff = data.diff;
+                
+                let badge = '';
+                if (diff > 1.5) {
+                    badge = '<span class="performance-badge badge-strong">Strong Improvement</span>';
+                } else if (diff > 0) {
+                    badge = '<span class="performance-badge badge-improving">Celebrity Advantage</span>';
+                } else if (diff === 0) {
+                    badge = '<span class="performance-badge badge-neutral">Equal Performance</span>';
+                } else {
+                    badge = '<span class="performance-badge badge-declining">Non-Celebrity Stronger</span>';
+                }
+                
+                const metricName = currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1);
+                
+                return `
+                    <div class="market-deep-dive">
+                        <div class="market-header">
+                            <div class="market-title">${market}</div>
+                            ${badge}
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart_${market.replace(/\s+/g, '_')}" height="100"></canvas>
+                        </div>
+                        <table style="margin-top: 20px;">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Average Lift</th>
+                                    <th>Assessment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Non-Celebrity</strong><br><em style="font-size: 0.85rem;">Q3'23-Q3'24</em></td>
+                                    <td><strong>+${data.avgNonCeleb.toFixed(1)}pp</strong></td>
+                                    <td>Baseline performance</td>
+                                </tr>
+                                <tr style="background-color: ${diff > 0 ? 'rgba(52, 168, 83, 0.1)' : (diff < 0 ? 'rgba(234, 67, 53, 0.05)' : 'transparent')};">
+                                    <td><strong>Celebrity</strong><br><em style="font-size: 0.85rem;">Q4'24-Q1'25</em></td>
+                                    <td><strong>+${data.avgCeleb.toFixed(1)}pp</strong></td>
+                                    <td><span class="${diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'neutral')}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}pp ${diff > 0 ? 'improvement' : (diff < 0 ? 'decline' : 'no change')}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; margin-top: 15px; font-style: italic;">
+                            <i class="fas fa-info-circle"></i> ${MARKET_INSIGHTS[market]}
+                        </p>
+                    </div>
+                `;
+            }).join('');
+            
+            // Create charts after DOM update
+            setTimeout(() => {
+                markets.forEach(market => {
+                    createMarketChart(market);
+                });
+            }, 100);
+        }
+        
+        function createMarketChart(market) {
+            const data = MARKET_DATA[market][currentMetric];
+            const canvasId = `chart_${market.replace(/\s+/g, '_')}`;
+            const ctx = document.getElementById(canvasId);
+            
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Q3\'23', 'Q4\'23', 'Q1\'24', 'Q2\'24', 'Q3\'24', 'Q4\'24', 'Q1\'25'],
+                        datasets: [{
+                            label: `${market} ${currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1)} Lift`,
+                            data: [...data.nonCeleb, ...data.celebrity],
+                            borderColor: data.diff > 0 ? '#34a853' : (data.diff < 0 ? '#ea4335' : '#fbbc04'),
+                            backgroundColor: data.diff > 0 ? 'rgba(52, 168, 83, 0.1)' : (data.diff < 0 ? 'rgba(234, 67, 53, 0.1)' : 'rgba(251, 188, 4, 0.1)'),
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: `${market}: ${currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1)} Lift Over Time`,
+                                color: '#8ab4f8',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            annotation: {
+                                annotations: {
+                                    celebLine: {
+                                        type: 'line',
+                                        xMin: 5,
+                                        xMax: 5,
+                                        borderColor: 'rgba(66, 133, 244, 0.6)',
+                                        borderWidth: 2,
+                                        borderDash: [5, 5],
+                                        label: {
+                                            display: true,
+                                            content: 'Celebrity Start',
+                                            position: 'start',
+                                            color: 'rgba(66, 133, 244, 0.8)',
+                                            font: { size: 10 }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: '#3d3d3d' },
+                                title: {
+                                    display: true,
+                                    text: 'Lift (pp)',
+                                    color: '#ffffff'
+                                }
+                            },
+                            x: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: '#3d3d3d' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
